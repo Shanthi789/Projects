@@ -1,0 +1,72 @@
+
+version: 2
+
+models:
+  - name: fact_order
+    description: "A order dbt model"
+    columns:
+      - name: customer_id
+        description: "The customer order for this table"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_id
+      - name: order_purchase_timestamp
+        description: "Timestamp of order purchase"
+        tests:
+          - is_datetime
+      - name: purchase_year
+        tests:
+          - is_integer
+      - name: order_id
+        tests:
+          - not_null
+  - name: fact_order_items
+    description: "A order items dbt model"
+    tests:
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          column_A: order_delivered_customer_date
+          column_B: order_purchase_timestamp
+          or_equal: true
+      - dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B:
+          column_A: order_estimated_delivery_date
+          column_B: order_purchase_timestamp
+          or_equal: true
+    columns:
+      - name: order_item_id
+        description: "Order items for this table"
+        tests:
+          - not_null
+          - is_integer
+      - name: order_delivered_customer_date
+        description: "Timestamp of order delivered"
+        tests:
+          - is_datetime
+      - name: order_estimated_delivery_date
+        description: "Timestamp of estimated order delivery"
+        tests:
+          - is_datetime
+      - name: customer_id
+        description: "customer id in fact_order_items"
+        tests:
+          - not_null
+      - name: order_purchase_timestamp
+        description: "Timestamp of order purchase"
+        tests:
+          - is_datetime
+      - name: order_id
+        tests:
+          - relationships:
+              to: ref('fact_order_items')
+              field: order_id
+          - not_null
+      - name: product_id
+        tests:
+          - not_null
+      - name: seller_id
+        tests:
+          - relationships:
+              to: ref('dim_seller')
+              field: seller_id
+          - not_null
